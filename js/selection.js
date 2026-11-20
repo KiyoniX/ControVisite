@@ -1,5 +1,6 @@
-// Logique pure : ordre et rang des centres. Aucun accès au DOM.
+// Logique pure : ordre et rang des centres. Aucun accès au DOM (testée dans tests/selection.test.js).
 import { CONFIG } from "./config.js";
+import { classerParPrix } from "./commun/liste.js";
 
 const JOUR = 24 * 3600 * 1000;
 
@@ -8,14 +9,7 @@ const JOUR = 24 * 3600 * 1000;
  *   centres : du moins cher au plus cher (à prix égal, le plus proche d'abord), avec `rang`
  */
 export function classer(centres) {
-  const tries = [...centres].sort((a, b) => a.prix - b.prix || a.distance - b.distance);
-
-  // Rang « sportif » : deux centres au même prix ont le même rang (1, 1, 3…).
-  const classes = tries.map((c, i) => ({ ...c, rang: i + 1 }));
-  for (let i = 1; i < classes.length; i++) {
-    if (classes[i].prix === classes[i - 1].prix) classes[i].rang = classes[i - 1].rang;
-  }
-
+  const classes = classerParPrix(centres, (c) => c.prix);
   return {
     centres: classes,
     min: classes.length ? classes[0].prix : null,
@@ -23,4 +17,5 @@ export function classer(centres) {
   };
 }
 
+/** Vrai si le prix a été déclaré il y a plus de CONFIG.prixAncienJours jours (ou à une date inconnue). */
 export const estAncien = (date, maintenant = new Date()) => !date || maintenant - date > CONFIG.prixAncienJours * JOUR;

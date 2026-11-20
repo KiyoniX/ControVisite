@@ -1,18 +1,27 @@
-// Carte Leaflet (variable globale L, chargée par index.html).
-import { CONFIG } from "./config.js";
-import { texteContreVisite } from "./classement.js";
-import { couleurPrix, depuis, el, lienGoogleMaps, montant, telephoneLisible } from "./format.js";
-
-const BLEU_ZONE = "#0b6bcb";
+// Commun à RadEssence et ControVisite : garder ce fichier identique dans les deux dépôts
+// (vérification : npm run verifier-commun -- ../AutreDepot).
+//
+// Carte Leaflet (variable globale L, chargée par index.html) : la zone (cercle + point central à faire
+// glisser) et des points colorés. Ce que montre chaque point est décidé par le site (js/marqueurs.js).
+// Couleur de la zone : variable CSS --couleur-zone (css/site.css).
+// Réglages lus dans config.js : CONFIG.zoneParDefaut, CONFIG.tuiles.
+import { CONFIG } from "../config.js";
+import { el } from "./format.js";
 
 /**
- * Crée la carte dans `conteneur`.
- *   surClicCentre(id)              clic sur un centre
- *   surDeplacerCentre({lat, lon})  clic sur la carte ou point central déplacé
- * Renvoie { afficherZone, apercuRayon, afficherCentres, montrer, redimensionner }.
+ * Un point à afficher :
+ *   { id, lat, lon, couleur, taille = 8, infobulle, bulle: () => Element, cliquable = true }
+ * Les points sont dessinés dans l'ordre du tableau : le dernier passe au-dessus.
+ *
+ * @param conteneur                     élément qui reçoit la carte
+ * @param surClicPoint(id)              clic sur un point cliquable
+ * @param surDeplacerCentre({lat, lon}) clic sur la carte ou point central déplacé
+ * @returns {{ afficherZone, apercuRayon, afficherPoints, montrer, redimensionner }}
  */
-export function creerCarte(conteneur, { surClicCentre, surDeplacerCentre }) {
+export function creerCarte(conteneur, { surClicPoint, surDeplacerCentre }) {
   const { lat, lon } = CONFIG.zoneParDefaut;
+  const couleurZone = getComputedStyle(document.documentElement).getPropertyValue("--couleur-zone").trim() || "#0b6bcb";
+
   const carte = L.map(conteneur).setView([lat, lon], 12);
   L.tileLayer(CONFIG.tuiles.url, { attribution: CONFIG.tuiles.attribution, maxZoom: 19 }).addTo(carte);
   ajouterLegende(carte);
@@ -20,7 +29,7 @@ export function creerCarte(conteneur, { surClicCentre, surDeplacerCentre }) {
   // La zone : un cercle et un point central qu'on peut faire glisser.
   const cercle = L.circle([lat, lon], {
     radius: 1000,
-    color: BLEU_ZONE,
+    color: couleurZone,
     weight: 2,
     dashArray: "6 6",
     fillOpacity: 0.04,
@@ -62,27 +71,27 @@ export function creerCarte(conteneur, { surClicCentre, surDeplacerCentre }) {
     cercle.setRadius(rayonKm * 1000);
   }
 
-  function afficherCentres(selection) {
+  function afficherPoints(points) {
     calque.clearLayers();
     marqueurs.clear();
-    // Du plus cher au moins cher : les centres les moins chers sont dessinés par-dessus.
-    for (const c of [...selection.centres].reverse()) {
-      const marqueur = L.circleMarker([c.lat, c.lon], {
-        radius: c.rang === 1 ? 11 : 8,
+    for (const p of points) {
+      const marqueur = L.circleMarker([p.lat, p.lon], {
+        radius: p.taille ?? 8,
         color: "#fff",
         weight: 2,
-        fillColor: couleurPrix(c.prix, selection),
+        fillColor: p.couleur,
         fillOpacity: 1,
-        bubblingMouseEvents: false,
+        bubblingMouseEvents: false, // un clic sur un point ne déplace pas la zone
       })
-        .bindTooltip(`${montant(c.prix)} · ${c.nom}`, { direction: "top" })
-        .bindPopup(() => bulle(c))
-        .on("click", () => surClicCentre(c.id))
+        .bindTooltip(p.infobulle, { direction: "top" })
+        .bindPopup(p.bulle)
         .addTo(calque);
-      marqueurs.set(c.id, marqueur);
+      if (p.cliquable !== false) marqueur.on("click", () => surClicPoint(p.id));
+      marqueurs.set(p.id, marqueur);
     }
   }
 
+  /** Centre la carte sur un point et ouvre sa bulle. */
   function montrer(id) {
     const marqueur = marqueurs.get(id);
     if (!marqueur) return;
@@ -93,26 +102,7 @@ export function creerCarte(conteneur, { surClicCentre, surDeplacerCentre }) {
   /** À appeler quand la carte change de taille ou redevient visible (bascule mobile). */
   const redimensionner = () => carte.invalidateSize();
 
-  return { afficherZone, apercuRayon, afficherCentres, montrer, redimensionner };
-}
-
-/** Contenu de la bulle d'un centre. */
-function bulle(c) {
-  const contreVisite = texteContreVisite(c.contreVisite);
-  return el(
-    "div",
-    { class: "bulle" },
-    el("strong", {}, c.nom),
-    el("br"),
-    `${c.adresse}, ${c.cp} ${c.ville}`,
-    el("br"),
-    el("span", { class: "bulle-prix" }, montant(c.prix)),
-    c.prixDepuis && ` · déclaré ${depuis(c.prixDepuis)}`,
-    contreVisite && [el("br"), contreVisite],
-    el("br"),
-    el("a", { href: lienGoogleMaps(c), target: "_blank", rel: "noopener" }, "Google Maps ↗"),
-    c.tel && [" · ", el("a", { href: `tel:${c.tel}` }, telephoneLisible(c.tel))],
-  );
+  return { afficherZone, apercuRayon, afficherPoints, montrer, redimensionner };
 }
 
 function ajouterLegende(carte) {
