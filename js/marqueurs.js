@@ -1,6 +1,6 @@
-// Ce que la carte montre pour chaque centre : couleur, taille, infobulle et bulle (voir js/commun/carte.js).
+// Ce que la carte montre pour chaque centre : couleur, taille, infobulle et bulle (voir js/base/carte.js).
 import { texteContreVisite } from "./classement.js";
-import { couleurPrix, depuis, el, lienGoogleMaps, montant, telephoneLisible } from "./commun/format.js";
+import { couleurPrix, depuis, el, lienGoogleMaps, montant, telephoneLisible } from "./base/format.js";
 
 /** Points de la carte, du plus cher au moins cher : les moins chers sont dessinés par-dessus. */
 export function pointsCarte(selection) {

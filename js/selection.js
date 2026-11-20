@@ -1,6 +1,6 @@
 // Logique pure : ordre et rang des centres. Aucun accès au DOM (testée dans tests/selection.test.js).
 import { CONFIG } from "./config.js";
-import { classerParPrix } from "./commun/liste.js";
+import { classerParPrix } from "./base/liste.js";
 
 const JOUR = 24 * 3600 * 1000;
 

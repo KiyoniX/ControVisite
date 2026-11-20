@@ -11,7 +11,7 @@ Classement des centres de contrôle technique les moins chers autour de n'import
 - Un tampon limite les requêtes : cache de 30 minutes par zone et par véhicule, délais d'attente, espacement et nouveaux essais (réglages `reseau` de `js/config.js`).
 - Sur mobile, on bascule entre la liste et la carte avec un bouton flottant.
 
-Projet frère de [RadEssence](https://github.com/KiyoniX/RadEssence) (prix des carburants), dont il reprend la base.
+Construit à partir de [RadEssence](https://github.com/KiyoniX/RadEssence) (prix des carburants), mais indépendant.
 
 ## Structure
 
@@ -25,12 +25,11 @@ Pas de framework ni d'étape de build : du HTML, du CSS et des modules JavaScrip
 | `js/classement.js` | Contenu des fiches du classement |
 | `js/marqueurs.js` | Ce que la carte montre pour chaque centre (couleur, bulle) |
 | `js/main.js` | Point d'entrée : état (zone, véhicule, énergie), adresse de la page, liaison des morceaux |
-| `js/commun/` | **Briques partagées avec RadEssence** (voir « Code partagé ») : carte, zone, chargement, mémoire, vue mobile, réseau, formats |
-| `css/commun.css` | Styles partagés : mise en page, thème sombre automatique, mobile en bas du fichier |
+| `js/base/` | Briques génériques : carte, zone, chargement, mémoire, vue mobile, réseau, formats, structure des fiches |
+| `css/base.css` | Styles de base : mise en page, thème sombre automatique, mobile en bas du fichier |
 | `css/site.css` | **Identité du site** : couleur d'accent et couleur de la zone |
 | `logo.svg` | Logo, aussi utilisé comme icône d'onglet |
-| `tests/` | Tests (`npm test`) ; `tests/commun/` est partagé avec RadEssence |
-| `outils/comparer-commun.mjs` | Vérifie que les fichiers partagés sont identiques à ceux de RadEssence |
+| `tests/` | Tests de la logique (`npm test`) |
 
 ## Modifier
 
@@ -40,7 +39,7 @@ Pas de framework ni d'étape de build : du HTML, du CSS et des modules JavaScrip
 
 **Changer le seuil « prix ancien »** : `prixAncienJours` dans `js/config.js`.
 
-**Changer les polices** : le lien Bunny Fonts dans `index.html`, puis `--police` et `--police-titre` dans `css/commun.css`.
+**Changer les polices** : le lien Bunny Fonts dans `index.html`, puis `--police` et `--police-titre` dans `css/base.css`.
 
 ## Bon à savoir sur les données
 
@@ -57,16 +56,10 @@ npm run local      # serveur local sur http://localhost:8000 (les modules JS ne 
 npm test           # tests de la logique (tri, rangs, formats, zone), aussi lancés par GitHub Actions à chaque push
 ```
 
-### Code partagé
+### Organisation du code
 
-[RadEssence](https://github.com/KiyoniX/RadEssence) et ControVisite ont la même base : tout ce qui est dans `js/commun/`, `css/commun.css`, `tests/commun/` et `outils/comparer-commun.mjs` est **identique dans les deux dépôts**. Chaque dépôt reste autonome (aucune dépendance entre eux), mais une correction faite d'un côté doit être recopiée de l'autre. Pour vérifier, avec les deux dépôts côte à côte :
-
-```sh
-npm run verifier-commun -- ../RadEssence
-```
-
-Ce qui est propre au site reste hors de `commun/` : `config.js`, `api.js` (lecture des données), `selection.js` (tri), `classement.js` (contenu des fiches), `marqueurs.js` (contenu de la carte) et `main.js` (état et liaison).
-Les modules communs lisent dans `config.js` les clés `zoneParDefaut`, `rayon`, `reseau`, `geocodage` et `tuiles`.
+`js/base/` contient les briques génériques : carte, zone, chargement, mémoire du navigateur, vue mobile, réseau, formats et structure des fiches. Le reste est propre au site : `config.js`, `api.js` (lecture des données), `selection.js` (tri), `classement.js` (contenu des fiches), `marqueurs.js` (contenu de la carte) et `main.js` (état et liaison).
+Les modules de `js/base/` lisent dans `config.js` les clés `zoneParDefaut`, `rayon`, `reseau`, `geocodage` et `tuiles`.
 
 ## Mettre en ligne
 
@@ -86,7 +79,7 @@ Un fork marche tel quel : active GitHub Pages sur ton dépôt (voir « Mettre en
 | Lien « Code source » et clé de stockage du navigateur | `site` dans `js/config.js` (change `cleMemoire` pour ne pas mélanger tes réglages avec ceux du site d'origine) |
 | Zone de la première visite | `zoneParDefaut` dans `js/config.js` |
 
-**Brancher une autre source de données** (autre type de prix, autre pays…) : réécris `js/api.js` pour qu'il renvoie des objets `{ id, lat, lon, distance, … }`, puis adapte `selection.js`, `classement.js` et `marqueurs.js`. La carte, la zone, le tampon réseau, la mémoire et la vue mobile (`js/commun/`) n'ont pas à changer.
+**Brancher une autre source de données** (autre type de prix, autre pays…) : réécris `js/api.js` pour qu'il renvoie des objets `{ id, lat, lon, distance, … }`, puis adapte `selection.js`, `classement.js` et `marqueurs.js`. La carte, la zone, le tampon réseau, la mémoire et la vue mobile (`js/base/`) n'ont pas à changer.
 
 ## Licence
 

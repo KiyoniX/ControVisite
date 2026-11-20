@@ -1,7 +1,7 @@
-// Affichage de la liste des centres (la structure d'une fiche est dans js/commun/liste.js).
+// Affichage de la liste des centres (la structure d'une fiche est dans js/base/liste.js).
 import { estAncien } from "./selection.js";
-import { fiche } from "./commun/liste.js";
-import { depuis, el, kilometres, montant, telephoneLisible } from "./commun/format.js";
+import { fiche } from "./base/liste.js";
+import { depuis, el, kilometres, montant, telephoneLisible } from "./base/format.js";
 
 /** Remplit la liste <ol> du classement. `surVoir(id)` montre le centre sur la carte. */
 export function afficherClassement(liste, selection, { surVoir }) {
